@@ -40,20 +40,20 @@ func main() {
 
 	if err = db.Ping(); err != nil {
 		log.Println(err)
-	}
+	} //确保数据库连接成功
 
 	defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
 			log.Println(err)
 		}
-	}(db)
+	}(db) //确保函数结束时关闭数据库
 
 	h := server.Default()
 
 	h.POST("/add", func(c context.Context, ctx *app.RequestContext) {
 		var student Student
-		if err := ctx.BindAndValidate(&student); err != nil {
+		if err := ctx.BindAndValidate(&student); err != nil { //绑定并验证
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
@@ -77,7 +77,7 @@ func main() {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		if _, exists := students[student.Name]; exists {
+		if _, exists := students[student.Name]; exists { //检查请求的学生是否存在
 			students[student.Name] = student
 			ctx.JSON(consts.StatusOK, utils.H{"message": "成功更新学生信息"})
 		} else {
@@ -86,7 +86,7 @@ func main() {
 	})
 
 	h.GET("/search", func(c context.Context, ctx *app.RequestContext) {
-		name := ctx.Query("name")
+		name := ctx.Query("name") //按照名字获取学生参数
 		mu.Lock()
 		defer mu.Unlock()
 		if student, exists := students[name]; exists {
@@ -117,7 +117,7 @@ func main() {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		_, err2 := db.Exec("INSERT INTO users (username,password) VALUES (?,?)",
+		_, err2 := db.Exec("INSERT INTO users (username,password) VALUES (?,?)", //连接users表并插入数据
 			user.Username, user.Password)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
@@ -129,20 +129,20 @@ func main() {
 	h.POST("/login", func(c context.Context, ctx *app.RequestContext) {
 		var user User
 		var password string
-		if err := ctx.BindAndValidate(&user); err != nil {
+		if err := ctx.BindAndValidate(&user); err != nil { //绑定user
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		err := db.QueryRow("select password from users where username = ? ",
-			user.Username).Scan(&password)
+		err := db.QueryRow("select password from users where username = ? ", //查询users表中的密码
+			user.Username).Scan(&password) //将查询结果赋值给password
 		if err != nil {
-			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
+			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()}) //查询失败
 			return
 		}
 		if password != user.Password {
-			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "账号或密码错误"})
+			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "账号或密码错误"}) //如果密码不匹配
 			return
 		}
 		ctx.JSON(consts.StatusOK, utils.H{"message": "登录成功"})
