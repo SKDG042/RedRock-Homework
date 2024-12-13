@@ -126,7 +126,7 @@ func main() {
 				return
 			}
 		}
-		ctx.JSON(consts.StatusOK, utils.H{"student": student})
+		ctx.JSON(consts.StatusOK, student)
 	})
 
 	h.DELETE("/Delete", func(c context.Context, ctx *app.RequestContext) {
@@ -139,6 +139,19 @@ func main() {
 			return
 		}
 		ctx.JSON(consts.StatusOK, utils.H{"message": "成功删除学生"})
+	})
+
+	h.DELETE("/Delete/field", func(c context.Context, ctx *app.RequestContext) {
+		name := ctx.Query("name")
+		field := ctx.Query("field")
+		mu.Lock()
+		defer mu.Unlock()
+		_, err := db.Exec("UPDATE students SET ? = NULL WHERE name = ?", field, name)
+		if err != nil {
+			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(consts.StatusOK, utils.H{"message": "成功删除学生字段"})
 	})
 
 	h.POST("/register", func(c context.Context, ctx *app.RequestContext) {
