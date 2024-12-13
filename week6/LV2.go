@@ -9,24 +9,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
-	"sync"
 )
-
-type Student struct {
-	Name     string `json:"name"`
-	ID       int    `json:"id"`
-	Address  string `json:"address"`
-	BirthDay string `json:"birthday"`
-	Gender   string `json:"gender"`
-}
-
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-var students = make(map[string]Student)
-var mu sync.Mutex
 
 func main() {
 
