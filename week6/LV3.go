@@ -164,7 +164,7 @@ func main() {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		_, err2 := db.Exec("INSERT INTO users (username,password,question,answer) VALUES (?,?)", //连接users表并插入数据
+		_, err2 := db.Exec("INSERT INTO users (username,password,question,answer) VALUES (?,?,?,?)", //连接users表并插入数据
 			user.Username, user.Password, user.Question, user.Answer)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
@@ -193,6 +193,24 @@ func main() {
 			return
 		}
 		ctx.JSON(consts.StatusOK, utils.H{"message": "登录成功"})
+	})
+
+	h.GET("/password/reset", func(c context.Context, ctx *app.RequestContext) {
+		var user User
+		var question string
+		if err := ctx.BindAndValidate(&user); err != nil {
+			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
+			return
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		err := db.QueryRow("select question from users where username = ? ", //查询users表中的密码
+			user.Username).Scan(&question) //将查询结果赋值给password
+		if err != nil {
+			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()}) //查询失败
+			return
+		}
+		ctx.JSON(consts.StatusOK, question)
 	})
 
 	h.Spin()
