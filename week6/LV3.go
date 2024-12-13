@@ -204,13 +204,38 @@ func main() {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		err := db.QueryRow("select question from users where username = ? ", //查询users表中的密码
-			user.Username).Scan(&question) //将查询结果赋值给password
+		err := db.QueryRow("select question from users where username = ? ", //查询users表中的问题
+			user.Username).Scan(&question) //将查询结果赋值给question
 		if err != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()}) //查询失败
 			return
 		}
 		ctx.JSON(consts.StatusOK, question)
+	})
+
+	h.POST("/password/reset", func(c context.Context, ctx *app.RequestContext) {
+		var user User
+		var correctAnswer string
+		if err := ctx.BindAndValidate(&user); err != nil {
+			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		err2 := db.QueryRow("SELECT answer FROM users WHERE username = ? ", user.Username).Scan(&correctAnswer)
+		if err2 != nil {
+			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
+			return
+		}
+		if user.Answer != correctAnswer {
+			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "密保错误"})
+			return
+		}
+		_, err3 := db.Exec("UPDATE users SET password = ? WHERE username = ?", user.Password, user.Username)
+		if err3 != nil {
+			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err3.Error()})
+			return
+		}
+		ctx.JSON(consts.StatusOK, utils.H{"message": "成功重置密码"})
 	})
 
 	h.Spin()
