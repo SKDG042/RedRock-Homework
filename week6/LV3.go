@@ -23,6 +23,8 @@ type Student struct {
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
 }
 
 var students = make(map[string]Student)
@@ -162,8 +164,8 @@ func main() {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		_, err2 := db.Exec("INSERT INTO users (username,password) VALUES (?,?)", //连接users表并插入数据
-			user.Username, user.Password)
+		_, err2 := db.Exec("INSERT INTO users (username,password,question,answer) VALUES (?,?)", //连接users表并插入数据
+			user.Username, user.Password, user.Question, user.Answer)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
 			return
