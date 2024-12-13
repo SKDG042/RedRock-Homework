@@ -55,19 +55,22 @@ func main() {
 
 	h.POST("/add", func(c context.Context, ctx *app.RequestContext) {
 		var student Student
-		if err := ctx.BindAndValidate(&student); err != nil { //绑定并验证
+		if err := ctx.BindAndValidate(&student); err != nil { //绑定student结构体并验证
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
+
+		//向数据库中插入学生信息
 		_, err2 := db.Exec("INSERT INTO students (name,id,address,birthday,gender) VALUES (?,?,?,?,?)",
 			student.Name, student.ID, student.Address, student.BirthDay, student.Gender)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
 			return
 		}
-		students[student.Name] = student
+
 		ctx.JSON(consts.StatusOK, utils.H{"message": "成功添加学生"})
 	})
 
@@ -77,8 +80,10 @@ func main() {
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
+
 		if _, exists := students[student.Name]; exists { //检查请求的学生是否存在
 			_, err := db.Exec("UPDATE students SET name = ?,id = ?,address = ?,birthday = ?,gender = ? WHERE name = ?")
 			if err != nil {
@@ -131,6 +136,7 @@ func main() {
 		ctx.JSON(consts.StatusOK, student)
 	})
 
+	//新增删除学生全部信息的接口
 	h.DELETE("/Delete", func(c context.Context, ctx *app.RequestContext) {
 		name := ctx.Query("name")
 		mu.Lock()
@@ -143,11 +149,15 @@ func main() {
 		ctx.JSON(consts.StatusOK, utils.H{"message": "成功删除学生"})
 	})
 
+	//新增删除某项字段的接口
 	h.DELETE("/Delete/field", func(c context.Context, ctx *app.RequestContext) {
 		name := ctx.Query("name")
 		field := ctx.Query("field")
+
 		mu.Lock()
 		defer mu.Unlock()
+
+		//根据输入的name和field将对应字段设置为null
 		_, err := db.Exec("UPDATE students SET ? = NULL WHERE name = ?", field, name)
 		if err != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
@@ -158,13 +168,17 @@ func main() {
 
 	h.POST("/register", func(c context.Context, ctx *app.RequestContext) {
 		var user User
+
 		if err := ctx.BindAndValidate(&user); err != nil {
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
-		_, err2 := db.Exec("INSERT INTO users (username,password,question,answer) VALUES (?,?,?,?)", //连接users表并插入数据
+
+		//向数据库中插入用户信息
+		_, err2 := db.Exec("INSERT INTO users (username,password,question,answer) VALUES (?,?,?,?)",
 			user.Username, user.Password, user.Question, user.Answer)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
@@ -176,12 +190,15 @@ func main() {
 	h.POST("/login", func(c context.Context, ctx *app.RequestContext) {
 		var user User
 		var password string
+
 		if err := ctx.BindAndValidate(&user); err != nil { //绑定user
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
+
 		err := db.QueryRow("select password from users where username = ? ", //查询users表中的密码
 			user.Username).Scan(&password) //将查询结果赋值给password
 		if err != nil {
@@ -189,7 +206,7 @@ func main() {
 			return
 		}
 		if password != user.Password {
-			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "账号或密码错误"}) //如果密码不匹配
+			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "账号或密码错误"}) //如果密码不匹配返回错误信息
 			return
 		}
 		ctx.JSON(consts.StatusOK, utils.H{"message": "登录成功"})
@@ -198,19 +215,22 @@ func main() {
 	h.GET("/password/reset", func(c context.Context, ctx *app.RequestContext) {
 		var user User
 		var question string
+
 		if err := ctx.BindAndValidate(&user); err != nil {
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 			return
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
+
 		err := db.QueryRow("select question from users where username = ? ", //查询users表中的问题
 			user.Username).Scan(&question) //将查询结果赋值给question
 		if err != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()}) //查询失败
 			return
 		}
-		ctx.JSON(consts.StatusOK, question)
+		ctx.JSON(consts.StatusOK, question) //返回查询到的密保问题
 	})
 
 	h.POST("/password/reset", func(c context.Context, ctx *app.RequestContext) {
@@ -219,23 +239,27 @@ func main() {
 		if err := ctx.BindAndValidate(&user); err != nil {
 			ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
 		}
+
 		mu.Lock()
 		defer mu.Unlock()
+
+		//通过username查询正确的密保答案赋值给correctAnswer
 		err2 := db.QueryRow("SELECT answer FROM users WHERE username = ? ", user.Username).Scan(&correctAnswer)
 		if err2 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err2.Error()})
 			return
 		}
-		if user.Answer != correctAnswer {
+		if user.Answer != correctAnswer { //将输入的密保答案与正确的密保答案进行比较
 			ctx.JSON(consts.StatusUnauthorized, utils.H{"error": "密保错误"})
 			return
 		}
+		//如果密保答案正确，更新密码
 		_, err3 := db.Exec("UPDATE users SET password = ? WHERE username = ?", user.Password, user.Username)
 		if err3 != nil {
 			ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err3.Error()})
 			return
 		}
-		ctx.JSON(consts.StatusOK, utils.H{"message": "成功重置密码"})
+		ctx.JSON(consts.StatusOK, utils.H{"message": "成功重置密码"}) //返回成功信息
 	})
 
 	h.Spin()
