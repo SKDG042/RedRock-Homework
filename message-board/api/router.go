@@ -10,6 +10,7 @@ func InitRouter() *server.Hertz {
 
 	h.POST("/register", service.Register)
 	h.POST("/login", service.Login)
+	h.POST("/message", service.Message)
 
 	return h
 }
