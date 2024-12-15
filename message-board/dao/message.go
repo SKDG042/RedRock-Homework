@@ -35,3 +35,8 @@ func GetAllMessages() ([]model.Message, error) {
 	}
 	return messages, err
 }
+
+func DeleteMessage(id int) error {
+	_, err := db.Exec("DELETE FROM messages WHERE id = ?", id) //根据id删除消息
+	return err
+}

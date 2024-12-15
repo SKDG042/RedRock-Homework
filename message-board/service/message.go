@@ -7,6 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"strconv"
 	"time"
 )
 
@@ -38,4 +39,21 @@ func GetAllMessage(c context.Context, ctx *app.RequestContext) {
 		return
 	}
 	ctx.JSON(consts.StatusOK, messages)
+}
+
+func DeleteMessage(c context.Context, ctx *app.RequestContext) {
+	idStr := ctx.Query("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
+		return
+	}
+
+	err = dao.DeleteMessage(id)
+	if err != nil {
+		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(consts.StatusOK, utils.H{"message": "成功删除留言"})
 }

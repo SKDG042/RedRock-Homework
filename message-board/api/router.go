@@ -12,6 +12,7 @@ func InitRouter() *server.Hertz {
 	h.POST("/login", service.Login)
 	h.POST("/message", service.Message)
 	h.GET("/message", service.GetAllMessage)
+	h.DELETE("/message", service.DeleteMessage)
 
 	return h
 }
