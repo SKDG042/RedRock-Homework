@@ -24,3 +24,12 @@ func CreateUser(user model.User) error {
 	_, err := db.Exec("INSERT INTO users (nickname, username , password,created_at,updated_at) VALUES (?,?,?,?,?)", user.Nickname, user.Username, user.Password, createdAt, updatedAt)
 	return err
 }
+
+func GetUser(username string) (*model.User, error) {
+	var user model.User
+	err := db.QueryRow("SELECT username, password FROM users WHERE username = ?", username).Scan(&user.Username, &user.Password)
+	if err != nil {
+		return nil, err
+	}
+	return &user, err
+}
