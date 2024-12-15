@@ -30,3 +30,12 @@ func Message(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(consts.StatusOK, utils.H{"message": "成功发表留言"})
 
 }
+
+func GetAllMessage(c context.Context, ctx *app.RequestContext) {
+	messages, err := dao.GetAllMessages()
+	if err != nil {
+		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(consts.StatusOK, messages)
+}

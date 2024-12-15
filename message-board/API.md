@@ -136,7 +136,50 @@
 |  400   |  请求参数错误  |
 |  500   | 服务器内部错误 |
 
+## 4. 获取所有留言
 
+**URL**: `/message`
+
+**方法**: `GET`
+
+**请求参数**: 无
+
+**响应参数**:
+
+|   参数名   |     类型      |    说明    |
+| :--------: | :-----------: | :--------: |
+|     id     |      int      |  消息的ID  |
+|  user_id   |      int      |  用户的ID  |
+|  content   |    string     |  消息内容  |
+| created_at |    string     |  创建时间  |
+| updated_at |    string     |  更新时间  |
+| is_deleted |     bool      |  是否删除  |
+| parent_id  | sql.NullInt64 | 父消息的ID |
+
+**响应示例**
+
+```json
+[
+    {
+        "id": 1,
+        "user_id": 1,
+        "content": "我爱你 Ich Liebe Dich",
+        "created_at": "2024-10-01T12:00:00Z",
+        "updated_at": "2024-10-01T12:00:00Z",
+        "is_deleted": false,
+        "parent_id": {
+            "Int64": 0,
+            "Valid": false
+        }
+    }
+]
+```
+
+**错误响应**
+
+| 状态码 |      说明      |
+| :----: | :------------: |
+|  500   | 服务器内部错误 |
 
 
 
