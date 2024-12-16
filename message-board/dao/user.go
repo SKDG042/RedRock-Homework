@@ -33,3 +33,8 @@ func GetUser(username string) (*model.User, error) {
 	}
 	return &user, err
 }
+
+func UpdateUser(user model.User) error {
+	_, err := db.Exec("UPDATE users SET nickname = ?, password = ? WHERE id = ? OR username = ?", user.Nickname, user.Password, user.ID, user.Username)
+	return err
+}

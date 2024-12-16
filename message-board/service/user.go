@@ -53,3 +53,21 @@ func Login(c context.Context, ctx *app.RequestContext) {
 		ctx.JSON(consts.StatusOK, utils.H{"message": "登录成功"})
 	}
 }
+
+func UpdateUser(c context.Context, ctx *app.RequestContext) {
+	var user model.User
+
+	if err := ctx.BindAndValidate(&user); err != nil {
+		ctx.JSON(consts.StatusBadRequest, utils.H{"error": err.Error()})
+		return
+	}
+
+	user.UpdatedAt = time.Now()
+
+	if err := dao.UpdateUser(user); err != nil {
+		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(consts.StatusOK, utils.H{"message": "成功更新用户信息"})
+}
