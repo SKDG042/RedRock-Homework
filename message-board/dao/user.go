@@ -3,6 +3,7 @@ package dao
 import (
 	"Redrock/message-board/model"
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 )
@@ -35,6 +36,17 @@ func GetUser(username string) (*model.User, error) {
 }
 
 func UpdateUser(user model.User) error {
-	_, err := db.Exec("UPDATE users SET nickname = ?, password = ? WHERE id = ? OR username = ?", user.Nickname, user.Password, user.ID, user.Username)
+	var initUser model.User
+	err := db.QueryRow("SELECT * FROM users WHERE id = ? OR username = ?", user.ID, user.Username).Scan(&initUser.ID, &initUser.Nickname, &initUser.Username, &initUser.Password, &initUser.CreatedAt, &initUser.UpdatedAt)
+	fmt.Println(initUser)
+	if user.Nickname == "" {
+		user.Nickname = initUser.Nickname
+	}
+
+	if user.Password == "" {
+		user.Password = initUser.Password
+	}
+	fmt.Println(user)
+	_, err = db.Exec("UPDATE users SET nickname = ?, password = ? WHERE id = ? OR username = ?", user.Nickname, user.Password, user.ID, user.Username)
 	return err
 }
