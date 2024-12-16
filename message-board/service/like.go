@@ -1,0 +1,34 @@
+package service
+
+import (
+	"Redrock/message-board/dao"
+	"context"
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"strconv"
+)
+
+func AddLike(c context.Context, ctx *app.RequestContext) {
+	idStr := ctx.Query("user_id")
+	messageIDStr := ctx.Query("message_id")
+
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(consts.StatusBadRequest, utils.H{"error": "用户ID不存在"})
+		return
+	}
+
+	messageID, err := strconv.Atoi(messageIDStr)
+	if err != nil {
+		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": "留言ID不存在"})
+		return
+	}
+
+	if err := dao.AddLike(userID, messageID); err != nil {
+		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": "点赞失败"})
+		return
+	}
+
+	ctx.JSON(consts.StatusOK, utils.H{"message": "成功点赞"})
+}
