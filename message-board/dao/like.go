@@ -19,3 +19,9 @@ func DeleteLike(userID, messageID int) error {
 
 	return err
 }
+
+func GetLike(messageID int) (int, error) {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM likes WHERE message_id = ?", messageID).Scan(&count)
+	return count, err
+}

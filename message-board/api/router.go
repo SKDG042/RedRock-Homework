@@ -16,7 +16,7 @@ func InitRouter() *server.Hertz {
 	h.PUT("/user", service.UpdateUser)
 	h.POST("/like", service.AddLike)
 	h.DELETE("/like", service.DeleteLike)
-	//h.GET("/like", service.GetLike)
+	h.GET("/like", service.GetLike)
 
 	return h
 }
