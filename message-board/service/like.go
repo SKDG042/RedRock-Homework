@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func AddLike(c context.Context, ctx *app.RequestContext) {
+func AddLike(_ context.Context, ctx *app.RequestContext) {
 	idStr := ctx.PostForm("user_id")
 	messageIDStr := ctx.PostForm("message_id")
 
@@ -33,7 +33,7 @@ func AddLike(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(consts.StatusOK, utils.H{"message": "成功点赞"})
 }
 
-func DeleteLike(c context.Context, ctx *app.RequestContext) {
+func DeleteLike(_ context.Context, ctx *app.RequestContext) {
 	idStr := ctx.PostForm("user_id")
 	messageIDStr := ctx.PostForm("message_id")
 
@@ -57,7 +57,7 @@ func DeleteLike(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(consts.StatusOK, utils.H{"message": "成功取消点赞"})
 }
 
-func GetLike(c context.Context, ctx *app.RequestContext) {
+func GetLike(_ context.Context, ctx *app.RequestContext) {
 	messageIDStr := ctx.Query("message_id")
 
 	messageID, err := strconv.Atoi(messageIDStr)

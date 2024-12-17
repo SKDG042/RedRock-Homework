@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Register(c context.Context, ctx *app.RequestContext) {
+func Register(_ context.Context, ctx *app.RequestContext) {
 	var user model.User
 
 	if err := ctx.BindAndValidate(&user); err != nil {
@@ -29,7 +29,7 @@ func Register(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(consts.StatusOK, utils.H{"message": "成功注册用户"})
 }
 
-func Login(c context.Context, ctx *app.RequestContext) {
+func Login(_ context.Context, ctx *app.RequestContext) {
 	var LoginRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -54,7 +54,7 @@ func Login(c context.Context, ctx *app.RequestContext) {
 	}
 }
 
-func UpdateUser(c context.Context, ctx *app.RequestContext) {
+func UpdateUser(_ context.Context, ctx *app.RequestContext) {
 	var user model.User
 
 	if err := ctx.BindAndValidate(&user); err != nil {

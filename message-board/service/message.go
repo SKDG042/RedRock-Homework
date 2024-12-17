@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func Message(c context.Context, ctx *app.RequestContext) {
+func Message(_ context.Context, ctx *app.RequestContext) {
 	var message model.Message
 
 	if err := ctx.BindAndValidate(&message); err != nil {
@@ -32,7 +32,7 @@ func Message(c context.Context, ctx *app.RequestContext) {
 
 }
 
-func GetAllMessage(c context.Context, ctx *app.RequestContext) {
+func GetAllMessage(_ context.Context, ctx *app.RequestContext) {
 	messages, err := dao.GetAllMessages()
 	if err != nil {
 		ctx.JSON(consts.StatusInternalServerError, utils.H{"error": err.Error()})
@@ -41,7 +41,7 @@ func GetAllMessage(c context.Context, ctx *app.RequestContext) {
 	ctx.JSON(consts.StatusOK, messages)
 }
 
-func DeleteMessage(c context.Context, ctx *app.RequestContext) {
+func DeleteMessage(_ context.Context, ctx *app.RequestContext) {
 	idStr := ctx.Query("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
