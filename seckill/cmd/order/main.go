@@ -1,13 +1,15 @@
 package main
 
-import(
+import (
 	"log"
 
 	"github.com/spf13/viper"
 
 	"Redrock/seckill/internal/order/config"
+	"Redrock/seckill/internal/order/service"
 	"Redrock/seckill/internal/pkg/database"
 	"Redrock/seckill/internal/pkg/redis"
+	order "Redrock/seckill/kitex_gen/order/orderservice"
 )
 
 func main(){
@@ -44,6 +46,13 @@ func main(){
 	// 连接MQ todo...
 
 	// 启动kitex服务
+	svr := order.NewServer(new(service.OrderServiceImpl))
+
+	err = svr.Run()
+
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	select{}
 }

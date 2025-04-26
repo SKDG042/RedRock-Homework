@@ -6,8 +6,10 @@ import(
 	"github.com/spf13/viper"
 
 	"Redrock/seckill/internal/activity/config"
+	"Redrock/seckill/internal/activity/service"
 	"Redrock/seckill/internal/pkg/database"
 	"Redrock/seckill/internal/pkg/redis"
+	activity "Redrock/seckill/kitex_gen/activity/internalactivityservice"
 )
 
 func main(){
@@ -42,6 +44,13 @@ func main(){
 	defer redis.CloseRedis()
 
 	// TODO:启动kitex服务
+	svr := activity.NewServer(new(service.InternalActivityServiceImpl))
+
+	err = svr.Run()
+
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	select{}
 }
