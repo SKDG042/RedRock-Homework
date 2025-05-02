@@ -57,6 +57,7 @@ type ActivityInfo struct {
 	TotalStock     int64   `thrift:"totalStock,9" frugal:"9,default,i64" json:"totalStock"`
 	AvailableStock int64   `thrift:"availableStock,10" frugal:"10,default,i64" json:"availableStock"`
 	IsAvailable    bool    `thrift:"isAvailable,11" frugal:"11,default,bool" json:"isAvailable"`
+	Status         int32   `thrift:"status,12" frugal:"12,default,i32" json:"status"`
 }
 
 func NewActivityInfo() *ActivityInfo {
@@ -286,6 +287,7 @@ var fieldIDToName_CreateActivityResponse = map[int16]string{
 }
 
 type GetActivityListRequest struct {
+	Status int32 `thrift:"status,1" frugal:"1,default,i32" json:"status"`
 }
 
 func NewGetActivityListRequest() *GetActivityListRequest {
