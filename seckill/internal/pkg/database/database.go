@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"errors"
+
 	mysqldriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -12,8 +14,8 @@ import (
 var DB *gorm.DB
 
 func isDatabaseNotExistsError(err error) bool{
-	// 类型断言，将err转换为*mysqldriver.MySQLError类型
-	if mysqlErr, ok := err.(*mysqldriver.MySQLError); ok{
+	var mysqlErr *mysqldriver.MySQLError
+	if errors.As(err, &mysqlErr) {
 		return mysqlErr.Number == 1049
 	}
 	return false
