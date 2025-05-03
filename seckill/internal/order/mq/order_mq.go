@@ -2,14 +2,14 @@ package mq
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
-	"Redrock/seckill/internal/pkg/mq"
-	"Redrock/seckill/internal/pkg/models"
 	"Redrock/seckill/internal/order/data"
+	"Redrock/seckill/internal/pkg/models"
+	"Redrock/seckill/internal/pkg/mq"
 )
 
 // OrderMessage 订单消息
@@ -19,6 +19,8 @@ type OrderMessage struct{
 	ActivityID	uint		`json:"activity_id"`
 	ProductID	uint		`json:"product_id"`
 	Amount		float64		`json:"amount"`
+	Price       float64     `json:"price"`
+	Quantity    int         `json:"quantity"`
 }
 
 // OrderProducer 订单消息生产者
@@ -36,7 +38,7 @@ type OrderConsumer struct{
 func NewOrderProducer(config *mq.RabbitMQConfig) (*OrderProducer, error){
 	localRabbitMQ, err := mq.NewRabbitMQ(config)
 	if err != nil{
-		return nil, fmt.Errorf("创建订单消费者失败：%w", err)
+		return nil, fmt.Errorf("创建订单生产者失败：%w", err)
 	}
 
 	return &OrderProducer{
@@ -53,6 +55,23 @@ func (p *OrderProducer) Close(){
 
 // Produce 生产订单消息
 func (p *OrderProducer) Produce(message *OrderMessage) error{
+
+	if message.OrderSn == "" {
+        return fmt.Errorf("订单号不能为空")
+    }
+    
+    if message.UserID == 0 {
+        return fmt.Errorf("用户ID不能为0")
+    }
+    
+    if message.ActivityID == 0 {
+        return fmt.Errorf("活动ID不能为0")
+    }
+    
+    if message.ProductID == 0 {
+        return fmt.Errorf("商品ID不能为0")
+    }
+
 	data, err := json.Marshal(message)
 	if err != nil{
 		return fmt.Errorf("序列化消息失败：%w", err)
@@ -94,6 +113,16 @@ func (c *OrderConsumer) handlerOrderMessage(body []byte) error{
 
 	log.Printf("收到订单消息：%v", msg)
 
+	// 检查活动是否存在
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	exist, err := c.orderData.GetByOrderSn(ctx, msg.OrderSn)
+	if err == nil && exist != nil{
+		log.Printf("订单%v已存在", msg.OrderSn)
+		return nil
+	}
+
 	// 创建订单
 	order := &models.Order{
 		OrderSn:		msg.OrderSn,
@@ -101,14 +130,13 @@ func (c *OrderConsumer) handlerOrderMessage(body []byte) error{
 		ActivityID:	msg.ActivityID,
 		ProductID:	msg.ProductID,
 		Amount:		msg.Amount,
-		Status:		models.StatusCreated,
+		Status:		models.StatusPending,
 		CreateTime:	time.Now(),
+		Price:		msg.Amount,
+		Quantity:	1,
 	}
 
 	// 写入数据库
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	
 	err = c.orderData.Create(ctx, order)
 	if err != nil{
 		log.Printf("创建订单失败：%v", err)
