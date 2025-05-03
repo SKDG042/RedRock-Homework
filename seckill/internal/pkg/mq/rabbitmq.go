@@ -1,6 +1,6 @@
 package mq
 
-import(
+import (
 	"fmt"
 	"log"
 
@@ -111,7 +111,11 @@ func (r *RabbitMQ) PublishMessage(body []byte) error{
 		},
 	)
 
-	return fmt.Errorf("发布消息失败：%w", err)
+	if err != nil{
+		return fmt.Errorf("发布消息失败：%w", err)
+	}
+
+	return nil
 }
 
 // ConsumeMessage 消费消息
