@@ -120,7 +120,9 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *order.CreateOrd
 		ProductID:			uint(activityResponse.Activity.ProductId),
 		Amount:				activityResponse.Activity.SeckillPrice,   // 因为我们这里默认秒杀一件商品，所以seckillprice == amount
 		Status:				models.StatusPending,
-		CreateTime: 		time.Now(),	
+		CreateTime: 		time.Now(),
+		Price:				activityResponse.Activity.SeckillPrice,
+		Quantity:			1,
 	}
 
 	err = s.orderData.Create(ctx, localOrder)
@@ -138,6 +140,8 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *order.CreateOrd
 		ActivityID:			activityID,
 		ProductID:			uint(activityResponse.Activity.ProductId),
 		Amount:				activityResponse.Activity.SeckillPrice,
+		Price:				activityResponse.Activity.SeckillPrice,
+		Quantity:			1, // 默认数量为1
 	}
 		
 	err = s.orderProducer.Produce(msg)
