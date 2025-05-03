@@ -7,13 +7,19 @@ server:
   port: 8889
   log_level: "debug"
 
+# 活动服务的RPC
+activity_rpc:
+  host: "127.0.0.1"
+  port: 8888
+  timeout: 1000 #毫秒
+
 #数据库配置
 database:
   host: localhost
   port: 3306
   username: "042"
   password: "123123"
-  dbname: "seckill_activity"  
+  dbname: "seckill_activity"
   charset: utf8mb4
   parseTime: true
   loc: UTC
@@ -26,6 +32,7 @@ redis:
   db: 1
   pool_size: 100
 
+# MQ配置
 mq:
   type: "rabbitmq"
   rabbitmq:
@@ -36,4 +43,3 @@ mq:
     exchange_name: "seckill_exchange"
     queue_name: "order_queue"
     routing_key: "order.create"
-  
