@@ -65,8 +65,9 @@ func main(){
 		server.WithServerBasicInfo(nil),
 	)
 
-	log.Printf("活动服务启动成功，地址为：%s:%d", config.Server.Host, config.Server.Port)
 	if err := svr.Run(); err != nil{
 		log.Fatalf("活动服务启动失败：%v", err)
 	}
+	
+	log.Printf("活动服务启动成功，地址为：%s:%d", config.Server.Host, config.Server.Port)
 }

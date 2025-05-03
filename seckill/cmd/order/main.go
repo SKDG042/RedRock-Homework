@@ -46,7 +46,7 @@ func main(){
 
 	// 自动迁移数据库表
 	if err := database.MigrateDB(&models.User{}, &models.Product{}, &models.Activity{}, &models.Order{}); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
+		log.Fatalf("数据库迁移失败: %v", err)
 	}
 
 	// 连接Redis
@@ -92,7 +92,7 @@ func main(){
 
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port))
 	if err != nil{
-		log.Fatalf("kitex服务器地址不可用：%v", err)
+		log.Fatalf("解析TCP地址失败: %v", err)
 	}
 
 	svr := order.NewServer(

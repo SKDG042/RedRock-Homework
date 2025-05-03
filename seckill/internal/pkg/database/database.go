@@ -1,11 +1,12 @@
 package database
 
-import(
+import (
 	"fmt"
+	"log"
+
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
-	mysqldriver "github.com/go-sql-driver/mysql"
 )
 
 var DB *gorm.DB
