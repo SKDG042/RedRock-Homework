@@ -67,7 +67,7 @@ func (d *OrderData) ListByUserID(ctx context.Context, userID uint, status int) (
 
 	query := d.db.WithContext(ctx).Where("user_id = ?", userID)
 
-	if status != 0{
+	if status != -1{
 		query = query.Where("status = ?", status)
 	}
 
