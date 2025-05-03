@@ -92,4 +92,14 @@ func (d *OrderData) UpdateStatus(ctx context.Context, orderSn string, status int
 	return err
 }
 
+// GetPendingOrders 获取处于Pending状态的订单
+func (d *OrderData) GetPendingOrders(ctx context.Context) ([]*models.Order, error){
+	var orders []*models.Order
 
+	err := d.db.WithContext(ctx).Where("status = ?", models.StatusPending).Find(&orders).Error
+	if err != nil{
+		return nil, err
+	}
+
+	return orders, nil
+}

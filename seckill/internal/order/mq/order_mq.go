@@ -102,7 +102,7 @@ func (c *OrderConsumer) Close(){
 	}
 }
 
-// handlerOrderMessage 处理订单消息
+// handlerOrderMessage 处理订单消息(仅负责确认收到消息更新状态)
 func (c *OrderConsumer) handlerOrderMessage(body []byte) error{
 	var msg OrderMessage
 
@@ -113,42 +113,31 @@ func (c *OrderConsumer) handlerOrderMessage(body []byte) error{
 
 	log.Printf("收到订单消息：%v", msg)
 
-	// 检查活动是否存在
+	// 检查订单是否存在
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	exist, err := c.orderData.GetByOrderSn(ctx, msg.OrderSn)
-	if err == nil && exist != nil{
-		log.Printf("订单%v已存在", msg.OrderSn)
-		return nil
-	}
-
-	// 创建订单
-	order := &models.Order{
-		OrderSn:		msg.OrderSn,
-		UserID:		msg.UserID,
-		ActivityID:	msg.ActivityID,
-		ProductID:	msg.ProductID,
-		Amount:		msg.Amount,
-		Status:		models.StatusPending,
-		CreateTime:	time.Now(),
-		Price:		msg.Amount,
-		Quantity:	1,
-	}
-
-	// 写入数据库
-	err = c.orderData.Create(ctx, order)
 	if err != nil{
-		log.Printf("创建订单失败：%v", err)
-		// 更新订单状态为失败
-		errUpdate := c.orderData.UpdateStatus(ctx, msg.OrderSn, models.StatusFailed)
-		if errUpdate != nil{
-			log.Printf("更新订单状态失败：%v", errUpdate)
-		}
-		return fmt.Errorf("创建订单失败：%w", err)
+		return fmt.Errorf("检查订单是否存在失败：%w", err)
 	}
 
-	log.Printf("订单创建成功：%v", order)
+	if exist == nil{
+		return fmt.Errorf("订单不存在")
+	}
+
+	if exist.Status == models.StatusPending {
+		log.Printf("开始更新订单%v状态", msg.OrderSn)
+
+		err = c.orderData.UpdateStatus(ctx, msg.OrderSn, models.StatusCreated)
+		if err != nil {
+			return fmt.Errorf("更新订单状态失败：%w", err)
+		}
+		
+		log.Printf("订单%v状态更新成功", msg.OrderSn)
+	} else {
+		log.Printf("订单%v当前状态不是Pending(状态码:%d)，无需更新", msg.OrderSn, exist.Status)
+	}
 
 	return nil
 }

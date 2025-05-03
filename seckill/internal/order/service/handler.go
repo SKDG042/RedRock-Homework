@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -33,13 +34,18 @@ func NewOrderServiceImpl(producer *mq.OrderProducer, activityClient activityClie
 		panic(fmt.Sprintf("创建内部活动客户端失败：%v",err))
 	}
 
-	return &OrderServiceImpl{
+	serviceImpl := &OrderServiceImpl{
 		orderData: 		data.NewOrderData(),
 		orderProducer: 	producer,
 		activityClient: activityClient,
 		redisClient: 	myRedis.GetRedis(),
 		internalClient: internalActivityClient,
 	}
+
+	// 启动恢复处于Pending状态的订单任务
+	go serviceImpl.RecoverPendingOrder(context.Background())
+	
+	return serviceImpl
 }
 
 // GenerateOrderSn 生成订单号
@@ -144,12 +150,10 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *order.CreateOrd
 		Quantity:			1, // 默认数量为1
 	}
 		
+	// 订单创建成功， handler主要负责创建订单，是否发送成功并不重要
 	err = s.orderProducer.Produce(msg)
 	if err != nil{
-		response.BaseResponse.Code = 500
-		response.BaseResponse.Msg  = "发送订单消息失败：" + err.Error()
-
-		return response, nil
+		log.Printf("发送订单消息失败：%v, 订单号：%v", err, orderSn)
 	}
 
 	// 5. 构建返回的订单信息
@@ -169,6 +173,49 @@ func (s *OrderServiceImpl) CreateOrder(ctx context.Context, req *order.CreateOrd
 	response.BaseResponse.Msg  = "下单成功"
 	
 	return response, nil
+}
+
+// RecoverPendingOrder 恢复处于Pending状态的订单
+func (s *OrderServiceImpl) RecoverPendingOrder(ctx context.Context){
+	// 定时调用函数,检测发送失败而未修改状态的消息
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select{
+		case <- ticker.C:
+			log.Printf("开始恢复处于Pending状态的订单")
+
+			// 获取所有处于Pending状态的订单
+			orders, err := s.orderData.GetPendingOrders(ctx)
+			if err != nil{
+				log.Printf("获取处于Pending状态的订单失败：%v", err)
+				continue
+			}
+
+			for _, order := range orders{
+				msg := &mq.OrderMessage{
+                    OrderSn:     order.OrderSn,
+                    UserID:      order.UserID,
+                    ActivityID:  order.ActivityID,
+                    ProductID:   order.ProductID,
+                    Amount:      order.Amount,
+                    Price:       order.Price,
+                    Quantity:    order.Quantity,
+                }
+
+				err = s.orderProducer.Produce(msg)
+				if err != nil{
+					log.Printf("重发订单消息失败：%v, 订单号：%v", err, order.OrderSn)
+				}else{
+					log.Printf("重发订单消息成功,订单号：%v", order.OrderSn)
+				}
+			}
+		case <- ctx.Done():
+			log.Printf("恢复处于Pending状态的订单任务停止")
+			return
+		}
+	}
 }
 
 // GetOrder 获取订单信息
