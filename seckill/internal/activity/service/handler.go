@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"Redrock/seckill/internal/activity/data"
 	"Redrock/seckill/internal/pkg/database"
 	"Redrock/seckill/internal/pkg/models"
+	"Redrock/seckill/internal/pkg/redis"
 	activity "Redrock/seckill/kitex_gen/activity"
 )
 
@@ -173,6 +175,12 @@ func (s *ActivityServiceImpl) GetActivity(ctx context.Context, req *activity.Get
 		BaseResponse: &activity.BaseResponse{},
 	}
 
+	// 更新所有活动状态
+	err := s.activityData.AutoUpdateActivityStatus(ctx)
+	if err != nil{
+		log.Printf("自动更新活动状态失败：%v\n", err)
+	}
+
 	if req.ActivityID <= 0{
 		response.BaseResponse.Code = 400
 		response.BaseResponse.Msg  = "活动ID不能为空"
@@ -231,6 +239,26 @@ func (s *ActivityServiceImpl) DeductStock(ctx context.Context, req *activity.Ded
 		BaseResponse: &activity.BaseResponse{},
 		Success: 		false,	
 	}
+
+	// 创建分布式锁
+	lockKey := fmt.Sprintf("activity:lock:%d", req.ActivityID)
+	lock 	:= redis.NewDistributedLock(s.activityRedis.GetRedis(), lockKey, 5*time.Second)
+
+	try, err := lock.TryLock(ctx)
+	// 返回err
+	if err != nil{
+		log.Printf("获取分布式锁失败：%v", err)
+	// 没有成功返回0
+	}else if !try{
+		response.BaseResponse.Code = 400
+		response.BaseResponse.Msg  = "系统繁忙，请稍后再试"
+
+		return response, nil
+	// 成功defer unlock确保释放锁
+	} else{
+		defer lock.Unlock(ctx)
+	}
+
 
 	if req.ActivityID <= 0 || req.UserID <= 0{
 		response.BaseResponse.Code = 400

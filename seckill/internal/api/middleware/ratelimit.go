@@ -57,6 +57,7 @@ func RedisRateLimiter(redisClient *redis.Client, config *RateLimiterConfig) app.
 		resetAfter := time.Until(time.Unix(expireAt, 0))
 		
 		// 设置RateLimit相关的HTTP头
+		// 限流上限 剩余可用请求数 限流重置时间
 		ctx.Header("X-RateLimit-Limit", strconv.Itoa(config.Limit))
 		ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(max(0, int64(config.Limit)-count+1))))
 		ctx.Header("X-RateLimit-Reset", strconv.FormatInt(int64(resetAfter.Seconds()), 10))
