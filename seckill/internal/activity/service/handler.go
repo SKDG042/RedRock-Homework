@@ -242,7 +242,7 @@ func (s *ActivityServiceImpl) DeductStock(ctx context.Context, req *activity.Ded
 
 	// 创建分布式锁
 	lockKey := fmt.Sprintf("activity:lock:%d", req.ActivityID)
-	lock 	:= redis.NewDistributedLock(s.activityRedis.GetRedis(), lockKey, 5*time.Second)
+	lock 	:= redis.NewDistributedLock(s.activityRedis.GetRedis(), lockKey, 1*time.Second)
 
 	try, err := lock.TryLock(ctx)
 	// 返回err
