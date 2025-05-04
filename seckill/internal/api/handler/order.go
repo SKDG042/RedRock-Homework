@@ -130,4 +130,3 @@ func (h *OrderHandler) ListUserOrders(ctx context.Context, c *app.RequestContext
 
 	c.JSON(consts.StatusOK, resp)
 }
-

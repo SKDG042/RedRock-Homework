@@ -9,7 +9,7 @@ database:
   port: 3306
   username: "042"
   password: "123123"
-  dbname: "seckill_user"  
+  dbname: "seckill_activity"
   charset: utf8mb4
   parseTime: true
   loc: UTC

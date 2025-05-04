@@ -37,6 +37,11 @@ func NewActivityRedis() *ActivityRedis{
 	}
 }
 
+// GetRedis 获取Redis客户端
+func (r *ActivityRedis) GetRedis() *redis.Client{
+	return r.client
+}
+
 // SaveActivity 将活动信息保存到Redis
 func (r *ActivityRedis) SaveActivity(ctx context.Context, activity *models.Activity) error{
 	key :=  fmt.Sprintf("%s%d", activityCacheKeyPrefix, activity.ID)
