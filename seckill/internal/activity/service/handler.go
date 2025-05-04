@@ -25,6 +25,11 @@ func NewInternalActivityServiceImpl() *ActivityServiceImpl{
 	}
 }
 
+// NewActivityServiceImpl 创建活动服务实例
+func NewActivityServiceImpl() *ActivityServiceImpl {
+	return NewInternalActivityServiceImpl()
+}
+
 // CreateActivity 创建活动
 func (s *ActivityServiceImpl) CreateActivity(ctx context.Context, req *activity.CreateActivityRequest) (*activity.CreateActivityResponse, error){
 	response := &activity.CreateActivityResponse{
@@ -32,7 +37,7 @@ func (s *ActivityServiceImpl) CreateActivity(ctx context.Context, req *activity.
 	}
 
 	// 参数验证
-	if req.Name == " " || req.ProductID <= 0 || req.SeckillPrice <0 || req.TotalStock <= 0{
+	if req.Name == "" || req.ProductID <= 0 || req.SeckillPrice <0 || req.TotalStock <= 0{
 		response.BaseResponse.Code = 400
 		response.BaseResponse.Msg = "参数错误"
 
@@ -42,14 +47,14 @@ func (s *ActivityServiceImpl) CreateActivity(ctx context.Context, req *activity.
 	// 检查视奸是否合法
 	startTime := time.Unix(req.StartTime, 0)
 	endTime	:= time.Unix(req.EndTime, 0)
-	now := time.Now()
+	// now := time.Now()
 
-	if startTime.Before(now){
-		response.BaseResponse.Code = 400
-		response.BaseResponse.Msg = "活动开始时间不能早于当前时间"
+	// if startTime.Before(now){
+	// 	response.BaseResponse.Code = 400
+	// 	response.BaseResponse.Msg = "活动开始时间不能早于当前时间"
 
-		return response, nil
-	}
+	// 	return response, nil
+	// }
 
 	if endTime.Before(startTime){
 		response.BaseResponse.Code = 400

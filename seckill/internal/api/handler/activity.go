@@ -3,8 +3,9 @@ package handler
 import (
 	"context"
 	"strconv"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
+
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
 
 	"Redrock/seckill/internal/api/client"
 	"Redrock/seckill/kitex_gen/activity"

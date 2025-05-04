@@ -5,9 +5,15 @@ import (
 
 	"Redrock/seckill/internal/api/client"
 	"Redrock/seckill/internal/api/handler"
+	"Redrock/seckill/internal/api/middleware"
+	"Redrock/seckill/internal/pkg/redis"
+
 )
 
 func SetupRouter(h *server.Hertz, clients *client.RPCClients){
+	// 获取Redis实例
+	redisClient := redis.GetRedis()
+	
 	// 创建处理器
 	userHandler := handler.NewUserHandler(clients)
 	activityHandler := handler.NewActivityHandler(clients)
@@ -33,7 +39,7 @@ func SetupRouter(h *server.Hertz, clients *client.RPCClients){
 	// 订单相关路由
 	orderGroup := api.Group("/order")
 	{
-		orderGroup.POST("/seckill", orderHandler.CreateOrder)      		// 秒杀接口
+		orderGroup.POST("/seckill", middleware.SeckillLimiter(redisClient), orderHandler.CreateOrder)      		// 秒杀接口
 		orderGroup.GET("/status", orderHandler.GetOrder)     		// 查询订单状态
 		orderGroup.GET("/list/:user_id", orderHandler.ListUserOrders) 	// 获取用户订单列表
 	}

@@ -12,7 +12,8 @@ import (
 	"Redrock/seckill/internal/activity/service"
 	"Redrock/seckill/internal/pkg/database"
 	"Redrock/seckill/internal/pkg/redis"
-	activity "Redrock/seckill/kitex_gen/activity/internalactivityservice"
+	internalActivity "Redrock/seckill/kitex_gen/activity/internalactivityservice"
+	activity "Redrock/seckill/kitex_gen/activity/activityservice"
 	"Redrock/seckill/internal/pkg/models"
 )
 
@@ -51,7 +52,7 @@ func main(){
 	defer redis.CloseRedis()
 
 	// 启动kitex服务
-	activityImpl := service.NewInternalActivityServiceImpl()
+	activityImpl := service.NewActivityServiceImpl()
 
 	// 将字符串转化为TCP地址
 	address, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port))
@@ -59,11 +60,17 @@ func main(){
 		log.Fatalf("解析TCP地址失败：%v", err)
 	}
 
-	svr := activity.NewServer(
-		activityImpl,
-		server.WithServiceAddr(address),
-		server.WithServerBasicInfo(nil),
-	)
+	svr := server.NewServer(server.WithServiceAddr(address))
+
+	// 注册ActivityService服务
+	if err := activity.RegisterService(svr, activityImpl); err != nil {
+		log.Fatalf("注册ActivityService服务失败：%v", err)
+	}
+	
+	// 注册InternalActivityService服务
+	if err := internalActivity.RegisterService(svr, activityImpl); err != nil {
+		log.Fatalf("注册InternalActivityService服务失败：%v", err)
+	}
 
 	if err := svr.Run(); err != nil{
 		log.Fatalf("活动服务启动失败：%v", err)

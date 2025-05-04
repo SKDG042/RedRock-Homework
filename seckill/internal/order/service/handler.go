@@ -6,10 +6,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/cloudwego/kitex/client"
 	"github.com/redis/go-redis/v9"
 
 	"Redrock/seckill/internal/order/data"
 	"Redrock/seckill/internal/order/mq"
+	"Redrock/seckill/internal/order/config"
 	"Redrock/seckill/internal/pkg/models"
 	myRedis "Redrock/seckill/internal/pkg/redis"
 	"Redrock/seckill/kitex_gen/activity"
@@ -28,8 +30,12 @@ type OrderServiceImpl struct{
 }
 
 // NewOrderServiceImpl 创建服务实现实例
-func NewOrderServiceImpl(producer *mq.OrderProducer, activityClient activityClient.Client) *OrderServiceImpl{
-	internalActivityClient, err := internalClient.NewClient("Activity")
+func NewOrderServiceImpl(producer *mq.OrderProducer, activityClient activityClient.Client, config *config.Config) *OrderServiceImpl{
+	internalActivityClient, err := internalClient.NewClient(
+		"activity_service",
+		client.WithHostPorts(fmt.Sprintf("%s:%d", config.ActivityRPC.Host, config.ActivityRPC.Port)),
+		client.WithRPCTimeout(time.Duration(config.ActivityRPC.Timeout) * time.Millisecond),
+	)
 	if err != nil{
 		panic(fmt.Sprintf("创建内部活动客户端失败：%v",err))
 	}

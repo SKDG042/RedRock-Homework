@@ -88,7 +88,7 @@ func main(){
 	}
 
 	// 启动kitex服务
-	orderImpl := service.NewOrderServiceImpl(orderProducer, activityServiceClient)
+	orderImpl := service.NewOrderServiceImpl(orderProducer, activityServiceClient, &config)
 
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port))
 	if err != nil{
